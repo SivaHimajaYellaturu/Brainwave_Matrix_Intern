@@ -1,0 +1,96 @@
+document.addEventListener('DOMContentLoaded', () => {
+  const taskForm = document.getElementById('task-form');
+  const taskList = document.getElementById('task-list');
+
+  // Load tasks from local storage
+  loadTasks();
+
+  taskForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const title = document.getElementById('task-title').value;
+    const description = document.getElementById('task-description').value;
+    const time = document.getElementById('task-time').value;
+
+    if (title && time) {
+      addTask(title, description, time);
+      taskForm.reset();
+    } else {
+      alert('Please fill in the task title and time.');
+    }
+  });
+
+  function addTask(title, description, time) {
+    const task = {
+      id: Date.now(),
+      title,
+      description,
+      time,
+      completed: false
+    };
+
+    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+    tasks.push(task);
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+    renderTasks();
+  }
+
+  function renderTasks() {
+    taskList.innerHTML = '';
+    const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+    tasks.forEach(task => {
+      const taskElement = document.createElement('div');
+      taskElement.classList.add('task');
+      if (task.completed) {
+        taskElement.classList.add('completed');
+      }
+
+      taskElement.innerHTML = `
+        <div>
+          <h3>${task.title}</h3>
+          <p>${task.description}</p>
+          <small>${task.time}</small>
+        </div>
+        <div class="actions">
+          <button class="complete" onclick="toggleComplete(${task.id})">✓</button>
+          <button class="edit" onclick="editTask(${task.id})">✎</button>
+          <button class="delete" onclick="deleteTask(${task.id})">✕</button>
+        </div>
+      `;
+      taskList.appendChild(taskElement);
+    });
+  }
+
+  window.toggleComplete = (id) => {
+    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+    tasks = tasks.map(task => {
+      if (task.id === id) {
+        task.completed = !task.completed;
+      }
+      return task;
+    });
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+    renderTasks();
+  };
+
+  window.editTask = (id) => {
+    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+    const task = tasks.find(task => task.id === id);
+    if (task) {
+      document.getElementById('task-title').value = task.title;
+      document.getElementById('task-description').value = task.description;
+      document.getElementById('task-time').value = task.time;
+      deleteTask(id);
+    }
+  };
+
+  window.deleteTask = (id) => {
+    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+    tasks = tasks.filter(task => task.id !== id);
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+    renderTasks();
+  };
+
+  function loadTasks() {
+    renderTasks();
+  }
+});
